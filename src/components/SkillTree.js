@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import SortableTree from 'react-sortable-tree';
-import {getNodeAtPath, addNodeUnderParent, removeNodeAtPath} from 'react-sortable-tree';
+import {getNodeAtPath, addNodeUnderParent, removeNodeAtPath, toggleExpandedForAll} from 'react-sortable-tree';
 import FaTrash from 'react-icons/lib/fa/trash';
 
 
@@ -10,6 +10,9 @@ class SkillTree extends Component {
         super(props);
 
         this.state = {
+          searchString: '',
+          searchFocusIndex: 0,
+          searchFoundCount: null,
             treeData: [
                 {   title: 'Root',
                     expanded: true,
@@ -45,14 +48,33 @@ class SkillTree extends Component {
             ],
         };
 
+        this.collapseAll    = this.collapseAll.bind(this);
+        this.expandAll      = this.expandAll.bind(this);
         this.updateSkillTreeData = this.updateSkillTreeData.bind(this);
         this.addNode = this.addNode.bind(this);
         this.removeNode = this.removeNode.bind(this);
     }
 
+    expand(expanded){
+      this.setState({
+        treeData: toggleExpandedForAll({
+          treeData: this.state.treeData,
+          expanded,
+        }),
+      });
+    }
+
+    collapseAll(){
+      this.expand(false);
+    }
+
+    expandAll(){
+      this.expand(true);
+    }
+
     addNode(rowInfo){
         let NEW_NODE = {title: ''};
-        let {node, treeIndex, path} = rowInfo;
+        let {path} = rowInfo;
 
         let parentNode = getNodeAtPath({
             treeData: this.state.treeData,
@@ -66,7 +88,7 @@ class SkillTree extends Component {
         };
 
         let parentKey = getNodeKey(parentNode);
-        if(parentKey == -1) {
+        if(parentKey === -1) {
             parentKey = null;
         }
         let newTree = addNodeUnderParent({
@@ -83,7 +105,7 @@ class SkillTree extends Component {
     }
 
     removeNode(rowInfo){
-        let {node, treeIndex, path} = rowInfo;
+        let {path} = rowInfo;
         this.setState({ treeData : removeNodeAtPath({
                                     treeData: this.state.treeData,
                                     path: path,   // You can use path from here
@@ -105,25 +127,23 @@ class SkillTree extends Component {
     render() {
         return (
             <div style={{ height: 1000 }}>
+                <button onClick={this.expandAll}>
+                    Expand All
+                </button>
+
+                <button onClick={this.collapseAll}>
+                    Collapse All
+                </button>
                 <SortableTree
                     treeData={this.state.treeData}
                     onChange={this.updateSkillTreeData}
                     generateNodeProps={rowInfo => ({
                         buttons: [
-                            //<div style={divStyle}>
-                            <div>
-                            {/*<TextField
-                              hintText=""
-                              multiLine={true}
-                              rows={1}
-                              rowsMax={4}
-                            />*/}
-                            <br />
                             <button label='Delete'
-                                   onClick={(event) => this.removeNode(rowInfo)}><FaTrash/></button>
+                                   onClick={(event) => this.removeNode(rowInfo)}><FaTrash/></button>,
                             <button label='Add'
                                    onClick={(event) => this.addNode(rowInfo)}>+</button>
-                            </div>,
+
                         ],
                         style: { height: '50px',}
                     })}
@@ -134,3 +154,15 @@ class SkillTree extends Component {
 }
 
 export default SkillTree;
+
+// Add below to buttons array in generateNodeProps after constructing TextField
+// component
+
+/*//<div style={divStyle}>
+{/*<TextField
+  hintText=""
+  multiLine={true}
+  rows={1}
+  rowsMax={4}
+/>*
+<br />*/
