@@ -125,31 +125,99 @@ class SkillTree extends Component {
     }
 
     render() {
-        return (
-            <div style={{ height: 1000 }}>
-                <button onClick={this.expandAll}>
-                    Expand All
-                </button>
+      const {
+        treeData,
+        searchString,
+        searchFocusIndex,
+        searchFoundCount,
+      } = this.state;
 
-                <button onClick={this.collapseAll}>
-                    Collapse All
-                </button>
-                <SortableTree
-                    treeData={this.state.treeData}
-                    onChange={this.updateSkillTreeData}
-                    generateNodeProps={rowInfo => ({
-                        buttons: [
-                            <button label='Delete'
-                                   onClick={(event) => this.removeNode(rowInfo)}><FaTrash/></button>,
-                            <button label='Add'
-                                   onClick={(event) => this.addNode(rowInfo)}>+</button>
+      const selectPrevMatch = () => this.setState({
+        searchFocusIndex: searchFocusIndex !== null ?
+        ((searchFoundCount + searchFocusIndex - 1) % searchFoundCount) :
+        searchFoundCount - 1,
+      });
 
-                        ],
-                        style: { height: '50px',}
-                    })}
-                />
-            </div>
-        );
+      const selectNextMatch = () => this.setState({
+        searchFocusIndex: searchFocusIndex !== null ?
+        ((searchFocusIndex + 1) % searchFoundCount) :
+        0,
+      });
+
+      return (
+          <div style={{ height: 1000 }}>
+              <button onClick={this.expandAll}>
+                  Expand All
+              </button>
+
+              <button onClick={this.collapseAll}>
+                  Collapse All
+              </button>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              <form
+                  style={{ display: 'inline-block' }}
+                  onSubmit={(event) => {
+                      event.preventDefault();
+                  }}
+              >
+                  <label htmlFor="find-box">
+                      Search:&nbsp;
+
+                      <input
+                          id="find-box"
+                          type="text"
+                          value={searchString}
+                          onChange={event => this.setState({ searchString: event.target.value })}
+                      />
+                  </label>
+
+                  <button
+                      type="button"
+                      disabled={!searchFoundCount}
+                      onClick={selectPrevMatch}
+                  >
+                      &lt;
+                  </button>
+
+                  <button
+                      type="submit"
+                      disabled={!searchFoundCount}
+                      onClick={selectNextMatch}
+                  >
+                      &gt;
+                  </button>
+
+                  <span>
+                      &nbsp;
+                      {searchFoundCount > 0 ? (searchFocusIndex + 1) : 0}
+                      &nbsp;/&nbsp;
+                      {searchFoundCount || 0}
+                  </span>
+              </form>
+              <SortableTree
+                  treeData={treeData}
+                  onChange={this.updateSkillTreeData}
+                  searchQuery={searchString}
+                  searchFocusOffset={searchFocusIndex}
+                  searchFinishCallback={matches =>
+                    this.setState({
+                      searchFoundCount:matches.length,
+                      searchFocusIndex:matches.length > 0 ? searchFocusIndex % matches.length : 0,
+                    })
+                  }
+                  generateNodeProps={rowInfo => ({
+                      buttons: [
+                          <button label='Delete'
+                                 onClick={(event) => this.removeNode(rowInfo)}><FaTrash/></button>,
+                          <button label='Add'
+                                 onClick={(event) => this.addNode(rowInfo)}>+</button>
+
+                      ],
+                      style: { height: '50px',}
+                  })}
+              />
+          </div>
+      );
     }
 }
 
